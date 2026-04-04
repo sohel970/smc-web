@@ -1,424 +1,267 @@
-
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sohel Math Care - Management System</title>
+    <title>SMC - Advanced Management System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --primary-color: #2c3e50;
-            --secondary-color: #27ae60;
-            --accent-color: #3498db;
-            --bg-color: #f4f7f6;
-        }
+        :root { --primary: #0f172a; --secondary: #10b981; --accent: #2563eb; --bg: #f8fafc; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; color: var(--primary); }
+        nav { background: var(--primary); color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+        .container { max-width: 1000px; margin: 2rem auto; padding: 0 1rem; }
+        .tabs { display: flex; gap: 10px; margin-bottom: 2rem; background: #e2e8f0; padding: 5px; border-radius: 8px; }
+        .tab-btn { flex: 1; padding: 12px; border: none; background: transparent; cursor: pointer; font-weight: 600; border-radius: 6px; transition: 0.3s; }
+        .tab-btn.active { background: white; color: var(--accent); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .section { display: none; background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+        .section.active { display: block; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 15px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.85rem; color: #64748b; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 1rem; box-sizing: border-box; }
+        .btn { padding: 14px; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; width: 100%; transition: 0.3s; font-size: 1rem; }
+        .btn-primary { background: var(--accent); color: white; }
+        .btn-success { background: var(--secondary); color: white; }
+        
+        /* Suggestions & Table */
+        .suggestion-container { position: relative; }
+        .suggestions { position: absolute; width: 100%; background: white; border: 1px solid #e2e8f0; z-index: 100; max-height: 200px; overflow-y: auto; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .suggestion-item { padding: 12px; cursor: pointer; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: left; }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            margin: 0;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1000px;
-            margin: auto;
-            background: white;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-
-        h1, h2 {
-            text-align: center;
-            color: var(--primary-color);
-        }
-
-        .tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            justify-content: center;
-        }
-
-        .tab-btn {
-            padding: 10px 20px;
-            border: none;
-            background: #ddd;
-            cursor: pointer;
-            border-radius: 5px;
-            font-weight: bold;
-        }
-
-        .tab-btn.active {
-            background: var(--primary-color);
-            color: white;
-        }
-
-        .section {
-            display: none;
-        }
-
-        .section.active {
-            display: block;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-
-        input, select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            box-sizing: border-box;
-        }
-
-        button.submit-btn {
-            background: var(--secondary-color);
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 5px;
-            cursor: pointer;
-            width: 100%;
-            font-size: 16px;
-        }
-
-        /* Suggestion Box */
-        .suggestions {
-            border: 1px solid #ddd;
-            max-height: 150px;
-            overflow-y: auto;
-            background: white;
-            position: absolute;
-            width: 95%;
-            z-index: 100;
-        }
-
-        .suggestion-item {
-            padding: 10px;
-            cursor: pointer;
-        }
-
-        .suggestion-item:hover {
-            background: #f0f0f0;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-
-        table, th, td {
-            border: 1px solid #ddd;
-        }
-
-        th, td {
-            padding: 12px;
-            text-align: left;
-        }
-
-        th {
-            background-color: var(--primary-color);
-            color: white;
-        }
-
-        /* Invoice Style */
-        #invoice {
-            display: none;
-            padding: 20px;
-            border: 2px solid #333;
-            margin-top: 20px;
-        }
-
+        /* Print Styles Fixed */
         @media print {
+            @page { size: A4; margin: 10mm; }
             body * { visibility: hidden; }
-            #invoice, #invoice * { visibility: visible; }
-            #invoice { position: absolute; left: 0; top: 0; width: 100%; border: none; }
+            #invoice-print, #invoice-print * { visibility: visible; }
+            #invoice-print { 
+                display: block !important; position: absolute; left: 0; top: 0; width: 100%; max-width: 180mm; padding: 10mm;
+            }
         }
-
-        .summary-cards {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-
-        .card {
-            background: var(--accent-color);
-            color: white;
-            padding: 20px;
-            border-radius: 8px;
-            text-align: center;
-        }
+        #invoice-print { display: none; }
     </style>
 </head>
 <body>
 
+<nav><h2>SOHEL MATH CARE</h2><div id="admin-tag">Admin Panel</div></nav>
+
 <div class="container">
-    <h1>Sohel Math Care</h1>
-    
     <div class="tabs">
-        <button class="tab-btn active" onclick="showSection('add-student')">Add Student</button>
-        <button class="tab-btn" onclick="showSection('payment')">Fees Payment</button>
+        <button class="tab-btn active" onclick="showSection('add-student')">Register Student</button>
+        <button class="tab-btn" onclick="showSection('payment')">Collect Fees</button>
         <button class="tab-btn" onclick="showSection('reports')">Reports</button>
     </div>
 
     <div id="add-student" class="section active">
-        <h2>নতুন স্টুডেন্ট যুক্ত করুন</h2>
-        <div class="form-group">
-            <label>স্টুডেন্ট নাম:</label>
-            <input type="text" id="s_name" placeholder="নাম লিখুন">
+        <h3>New Registration</h3>
+        <div class="grid">
+            <div class="form-group"><label>Full Name</label><input type="text" id="s_name"></div>
+            <div class="form-group"><label>Class (Numeric)</label><input type="number" id="s_class"></div>
+            <div class="form-group"><label>Monthly Fee (BDT)</label><input type="number" id="s_fee" value="2000"></div>
+            <div class="form-group"><label>Contact No</label><input type="text" id="s_phone"></div>
         </div>
-        <div class="form-group">
-            <label>পিতার নাম:</label>
-            <input type="text" id="s_father" placeholder="পিতার নাম">
-        </div>
-        <div class="form-group">
-            <label>মাতার নাম:</label>
-            <input type="text" id="s_mother" placeholder="মাতার নাম">
-        </div>
-        <div class="form-group">
-            <label>শ্রেণি:</label>
-            <input type="text" id="s_class" placeholder="যেমন: ১০ম">
-        </div>
-        <div class="form-group">
-            <label>স্কুলের নাম:</label>
-            <input type="text" id="s_school" placeholder="স্কুলের নাম">
-        </div>
-        <button class="submit-btn" onclick="saveStudent()">সেভ করুন</button>
+        <button class="btn btn-primary" onclick="saveStudent()">Register Student</button>
     </div>
 
     <div id="payment" class="section">
-        <h2>বেতন গ্রহণ</h2>
-        <div class="form-group" style="position: relative;">
-            <label>স্টুডেন্ট আইডি বা নাম দিয়ে খুঁজুন:</label>
-            <input type="text" id="search_student" onkeyup="searchStudent(this.value)" placeholder="টাইপ করুন...">
+        <h3>Collect Payment</h3>
+        <div class="suggestion-container">
+            <label>Search Student (ID or Name)</label>
+            <input type="text" id="search_input" onkeyup="handleSearch(this.value)" placeholder="Type to search...">
             <div id="suggestion_box" class="suggestions"></div>
         </div>
-        <div id="student_details" style="display:none; margin-bottom: 20px; padding: 10px; background: #eef;">
+        <div id="selected_info" style="margin: 15px 0; padding: 15px; background: #f0f7ff; border-radius: 8px; border-left: 4px solid var(--accent); display:none"></div>
+        <div class="grid">
+            <div class="form-group">
+                <label>Billing Month</label>
+                <select id="pay_month">
+                    <option>January</option><option>February</option><option>March</option>
+                    <option>April</option><option>May</option><option>June</option>
+                    <option>July</option><option>August</option><option>September</option>
+                    <option>October</option><option>November</option><option>December</option>
+                    <option>Others</option>
+                </select>
             </div>
-        <div class="form-group">
-            <label>টাকার পরিমাণ:</label>
-            <input type="number" id="pay_amount" placeholder="0.00">
+            <div class="form-group"><label>Fee Amount</label><input type="number" id="pay_amount"></div>
         </div>
-        <div class="form-group">
-            <label>মাসের নাম:</label>
-            <select id="pay_month">
-                <option>জানুয়ারি</option>
-                <option>ফেব্রুয়ারি</option>
-                <option>মার্চ</option>
-                <option>এপ্রিল</option>
-                <option>মে</option>
-                <option>জুন</option>
-                <option>জুলাই</option>
-                <option>আগস্ট</option>
-                <option>সেপ্টেম্বর</option>
-                <option>অক্টোবর</option>
-                <option>নভেম্বর</option>
-                <option>ডিসেম্বর</option>
-            </select>
-        </div>
-        <button class="submit-btn" onclick="processPayment()">পেমেন্ট এবং প্রিন্ট ইনভয়েস</button>
+        <button class="btn btn-success" id="payBtn" onclick="processPayment()">Confirm Payment & Print</button>
     </div>
 
     <div id="reports" class="section">
-        <h2>আয় ও রিপোর্ট</h2>
-        <div class="summary-cards">
-            <div class="card">
-                <h3>আজকের আয়</h3>
-                <h2 id="today_income">০ ৳</h2>
-            </div>
-            <div class="card" style="background: var(--secondary-color);">
-                <h3>মোট আয় (এই মাস)</h3>
-                <h2 id="month_income">০ ৳</h2>
-            </div>
+        <h3>Accounts History</h3>
+        <div class="grid" style="background: #f8fafc; padding: 15px; border-radius: 8px;">
+            <div class="form-group"><label>Search ID/Name</label><input type="text" id="rep_search_id" onkeyup="filterReports()"></div>
+            <div class="form-group"><label>Filter Date</label><input type="date" id="rep_search_date" onchange="filterReports()"></div>
         </div>
-        <input type="text" id="report_search" onkeyup="filterReport()" placeholder="যেকোনো তথ্য দিয়ে সার্চ করুন...">
-        <table id="report_table">
-            <thead>
-                <tr>
-                    <th>তারিখ</th>
-                    <th>আইডি</th>
-                    <th>নাম</th>
-                    <th>মাস</th>
-                    <th>টাকা</th>
-                </tr>
-            </thead>
-            <tbody id="report_body"></tbody>
+        <div class="grid">
+            <div style="background:var(--primary); color:white; padding:15px; border-radius:8px;">Today: <span id="today_total">0</span> ৳</div>
+            <div style="background:var(--secondary); color:white; padding:15px; border-radius:8px;">Total: <span id="count_total">0</span> Entries</div>
+        </div>
+        <table>
+            <thead><tr><th>Date</th><th>ID</th><th>Name</th><th>Month</th><th>Amount</th></tr></thead>
+            <tbody id="history_body"></tbody>
         </table>
     </div>
-
-    <div id="invoice">
-        <center>
-            <h1>Sohel Math Care</h1>
-            <p>ঠিকানা: আপনার সেন্টারের ঠিকানা এখানে লিখুন</p>
-            <hr>
-            <h3>পেমেন্ট রশিদ (Invoice)</h3>
-        </center>
-        <div id="invoice_content"></div>
-        <br><br>
-        <p style="text-align: right;">স্বাক্ষর: _________________</p>
-    </div>
-
 </div>
 
-<script>
-    // Initial Data
-    let students = JSON.parse(localStorage.getItem('students')) || [];
-    let payments = JSON.parse(localStorage.getItem('payments')) || [];
-    let selectedStudent = null;
+<div id="invoice-print">
+    <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px;">
+        <h1 style="margin:0">SOHEL MATH CARE</h1>
+        <p>Mathematics Coaching Center | Money Receipt</p>
+    </div>
+    <div style="margin: 20px 0; display: flex; justify-content: space-between;">
+        <div>
+            <p><strong>Student:</strong> <span id="inv_student_name"></span></p>
+            <p><strong>ID:</strong> <span id="inv_student_id"></span> | <strong>Class:</strong> <span id="inv_class"></span></p>
+        </div>
+        <div style="text-align: right;">
+            <p>Date: <span id="inv_date"></span></p>
+            <p>Receipt: #<span id="inv_num"></span></p>
+        </div>
+    </div>
+    <table style="width: 100%; border: 1px solid #000;">
+        <thead><tr style="background:#eee;"><th>Description</th><th style="text-align:right">Amount</th></tr></thead>
+        <tbody><tr><td style="padding:15px; border-bottom:1px solid #eee;">Tuition Fee - <span id="inv_month"></span></td>
+        <td style="padding:15px; border-bottom:1px solid #eee; text-align:right;"><span id="inv_amount"></span> ৳</td></tr></tbody>
+    </table>
+    <h3 style="text-align:right">Total Paid: <span id="inv_total_bold"></span> ৳</h3>
+    <div style="margin-top: 50px; display: flex; justify-content: space-between;">
+        <p>_________________<br>Guardian</p><p>_________________<br>Authority</p>
+    </div>
+</div>
 
-    // Navigation
-    function showSection(id) {
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, getDocs, query, where, orderBy, limit, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyBdSM2HqyHdfBR5lBOL8auQv_AZBiKqFng",
+        authDomain: "smcweb-ad35e.firebaseapp.com",
+        projectId: "smcweb-ad35e",
+        storageBucket: "smcweb-ad35e.firebasestorage.app",
+        messagingSenderId: "124372753816",
+        appId: "1:124372753816:web:e7824351434a16f14d1fed",
+        measurementId: "G-TZF0FVRRQ4"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    window.showSection = (id) => {
         document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         document.getElementById(id).classList.add('active');
         event.currentTarget.classList.add('active');
-        if(id === 'reports') loadReports();
-    }
+        if(id === 'reports') filterReports();
+    };
 
-    // Save Student
-    function saveStudent() {
-        const student = {
-            id: 'SMC-' + (students.length + 101),
-            name: document.getElementById('s_name').value,
-            father: document.getElementById('s_father').value,
-            mother: document.getElementById('s_mother').value,
-            class: document.getElementById('s_class').value,
-            school: document.getElementById('s_school').value
-        };
+    // --- 1. Registration with Auto-ID & Fee ---
+    window.saveStudent = async () => {
+        const name = document.getElementById('s_name').value;
+        const cls = document.getElementById('s_class').value;
+        const fee = document.getElementById('s_fee').value;
+        if(!name || !cls || !fee) return alert("Fill all fields!");
 
-        if(!student.name || !student.class) return alert("নাম এবং শ্রেণি অবশ্যই দিতে হবে!");
+        try {
+            const q = query(collection(db, "students"), where("class", "==", cls), orderBy("customId", "desc"), limit(1));
+            const snap = await getDocs(q);
+            let nextNum = 1;
+            if(!snap.empty) nextNum = parseInt(snap.docs[0].data().customId.split('-')[1].substring(1)) + 1;
 
-        students.push(student);
-        localStorage.setItem('students', JSON.stringify(students));
-        alert("স্টুডেন্ট সফলভাবে যুক্ত হয়েছে! আইডি: " + student.id);
-        
-        // Clear fields
-        document.querySelectorAll('#add-student input').forEach(i => i.value = '');
-    }
+            const customId = `SMC-${cls}${String(nextNum).padStart(4, '0')}`;
+            await addDoc(collection(db, "students"), {
+                customId, name, class: cls, monthlyFee: parseFloat(fee), createdAt: serverTimestamp()
+            });
+            alert("Registered! ID: " + customId);
+            location.reload();
+        } catch (e) { alert(e.message); }
+    };
 
-    // Search Student for Payment
-    function searchStudent(val) {
+    // --- 2. Search & Auto-Fill Fee ---
+    let selectedStudent = null;
+    window.handleSearch = async (val) => {
         const box = document.getElementById('suggestion_box');
         box.innerHTML = '';
-        if(!val) return;
+        if(val.length < 1) return;
 
-        const filtered = students.filter(s => 
-            s.name.toLowerCase().includes(val.toLowerCase()) || 
-            s.id.toLowerCase().includes(val.toLowerCase())
-        );
-
-        filtered.forEach(s => {
-            const div = document.createElement('div');
-            div.className = 'suggestion-item';
-            div.innerText = `${s.name} (${s.id}) - Class: ${s.class}`;
-            div.onclick = () => selectStudent(s);
-            box.appendChild(div);
+        const snap = await getDocs(collection(db, "students"));
+        snap.forEach(doc => {
+            const s = doc.data();
+            if(s.name.toLowerCase().includes(val.toLowerCase()) || s.customId.toLowerCase().includes(val.toLowerCase())) {
+                const d = document.createElement('div');
+                d.className = 'suggestion-item';
+                d.innerHTML = `<strong>${s.name}</strong> <span>${s.customId}</span>`;
+                d.onclick = () => {
+                    selectedStudent = s;
+                    document.getElementById('selected_info').style.display = 'block';
+                    document.getElementById('selected_info').innerHTML = `Selected: ${s.name} | ID: ${s.customId}`;
+                    document.getElementById('pay_amount').value = s.monthlyFee; // Auto-fill
+                    document.getElementById('search_input').value = s.customId;
+                    box.innerHTML = '';
+                };
+                box.appendChild(d);
+            }
         });
-    }
+    };
 
-    function selectStudent(student) {
-        selectedStudent = student;
-        document.getElementById('suggestion_box').innerHTML = '';
-        document.getElementById('search_student').value = student.name;
-        const details = document.getElementById('student_details');
-        details.style.display = 'block';
-        details.innerHTML = `<strong>ID:</strong> ${student.id} | <strong>Father:</strong> ${student.father} | <strong>Class:</strong> ${student.class}`;
-    }
-
-    // Payment Processing
-    function processPayment() {
-        const amount = document.getElementById('pay_amount').value;
+    // --- 3. Payment with Monthly Check ---
+    window.processPayment = async () => {
         const month = document.getElementById('pay_month').value;
-        const date = new Date().toLocaleDateString();
+        const amount = document.getElementById('pay_amount').value;
+        if(!selectedStudent || !amount) return alert("Select student!");
 
-        if(!selectedStudent || !amount) return alert("সব তথ্য সঠিকভাবে দিন!");
+        if(month !== "Others") {
+            const q = query(collection(db, "payments"), 
+                      where("studentId", "==", selectedStudent.customId), 
+                      where("month", "==", month));
+            const check = await getDocs(q);
+            if(!check.empty) return alert(`Payment for ${month} already exists! Use 'Others' for extra.`); //
+        }
 
-        const payEntry = {
-            date: date,
-            timestamp: new Date().getTime(),
-            studentId: selectedStudent.id,
-            studentName: selectedStudent.name,
-            amount: parseFloat(amount),
-            month: month
-        };
+        try {
+            await addDoc(collection(db, "payments"), {
+                studentId: selectedStudent.customId, studentName: selectedStudent.name,
+                class: selectedStudent.class, amount: parseFloat(amount), month,
+                date: new Date().toLocaleDateString(), timestamp: serverTimestamp()
+            });
+            document.getElementById('inv_student_name').innerText = selectedStudent.name;
+            document.getElementById('inv_student_id').innerText = selectedStudent.customId;
+            document.getElementById('inv_class').innerText = selectedStudent.class;
+            document.getElementById('inv_date').innerText = new Date().toLocaleDateString();
+            document.getElementById('inv_num').innerText = Date.now().toString().slice(-6);
+            document.getElementById('inv_month').innerText = month;
+            document.getElementById('inv_amount').innerText = amount;
+            document.getElementById('inv_total_bold').innerText = amount;
+            window.print();
+            location.reload();
+        } catch (e) { alert(e.message); }
+    };
 
-        payments.push(payEntry);
-        localStorage.setItem('payments', JSON.stringify(payments));
-
-        // Generate Invoice for Print
-        const invoiceHtml = `
-            <p><strong>তারিখ:</strong> ${date}</p>
-            <p><strong>রশিদ নং:</strong> ${new Date().getTime()}</p>
-            <p><strong>ছাত্র/ছাত্রীর নাম:</strong> ${selectedStudent.name}</p>
-            <p><strong>আইডি:</strong> ${selectedStudent.id}</p>
-            <p><strong>শ্রেণি:</strong> ${selectedStudent.class}</p>
-            <p><strong>মাস:</strong> ${month}</p>
-            <hr>
-            <h3><strong>মোট টাকা:</strong> ${amount} ৳</h3>
-        `;
-        document.getElementById('invoice_content').innerHTML = invoiceHtml;
-        
-        window.print();
-
-        // Reset
-        selectedStudent = null;
-        document.getElementById('student_details').style.display = 'none';
-        document.getElementById('pay_amount').value = '';
-        document.getElementById('search_student').value = '';
-    }
-
-    // Reports & Income Logic
-    function loadReports() {
-        const tbody = document.getElementById('report_body');
+    // --- 4. Advanced Report Search ---
+    window.filterReports = async () => {
+        const searchId = document.getElementById('rep_search_id').value.toLowerCase();
+        const searchDate = document.getElementById('rep_search_date').value;
+        const snap = await getDocs(query(collection(db, "payments"), orderBy("timestamp", "desc")));
+        const tbody = document.getElementById('history_body');
         tbody.innerHTML = '';
-        let todaySum = 0;
-        let monthSum = 0;
+        let todayTotal = 0; let count = 0;
         const todayStr = new Date().toLocaleDateString();
-        const currentMonth = new Date().getMonth();
 
-        payments.sort((a, b) => b.timestamp - a.timestamp).forEach(p => {
-            const row = `<tr>
-                <td>${p.date}</td>
-                <td>${p.studentId}</td>
-                <td>${p.studentName}</td>
-                <td>${p.month}</td>
-                <td>${p.amount}</td>
-            </tr>`;
-            tbody.innerHTML += row;
+        snap.forEach(doc => {
+            const p = doc.data();
+            const matchId = p.studentId.toLowerCase().includes(searchId) || p.studentName.toLowerCase().includes(searchId);
+            const matchDate = searchDate ? (p.date === new Date(searchDate).toLocaleDateString()) : true;
 
-            // Calculations
-            if(p.date === todayStr) todaySum += p.amount;
-            
-            // Simplified month check
-            const payDate = new Date(p.timestamp);
-            if(payDate.getMonth() === currentMonth) monthSum += p.amount;
+            if(matchId && matchDate) {
+                tbody.innerHTML += `<tr><td>${p.date}</td><td>${p.studentId}</td><td>${p.studentName}</td><td>${p.month}</td><td>${p.amount} ৳</td></tr>`;
+                if(p.date === todayStr) todayTotal += p.amount;
+                count++;
+            }
         });
-
-        document.getElementById('today_income').innerText = todaySum + ' ৳';
-        document.getElementById('month_income').innerText = monthSum + ' ৳';
-    }
-
-    // Search/Filter in Table
-    function filterReport() {
-        const val = document.getElementById('report_search').value.toLowerCase();
-        const rows = document.querySelectorAll('#report_table tbody tr');
-        rows.forEach(row => {
-            row.style.display = row.innerText.toLowerCase().includes(val) ? '' : 'none';
-        });
-    }
+        document.getElementById('today_total').innerText = todayTotal;
+        document.getElementById('count_total').innerText = count;
+    };
 </script>
-
 </body>
 </html>
