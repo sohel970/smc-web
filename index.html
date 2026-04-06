@@ -312,13 +312,31 @@
     };
 
     function printInvoice(d, id, a, t, m="") {
-        getEl('inv_type_title').innerText = t;
-        getEl('inv_content').innerHTML = `<div>Name: ${d.name}</div><div>ID: ${id}</div><div>Class: ${d.cls}</div><div>Phone: ${d.phone}</div>`;
-        getEl('inv_desc').innerText = m ? `Monthly Fee (${m})` : "Registration Fee";
+    getEl('inv_type_title').innerText = t;
+    getEl('inv_content').innerHTML = `
+        <div><strong>Name:</strong> ${d.name}</div>
+        <div><strong>Student ID:</strong> ${id}</div>
+        <div><strong>Class:</strong> ${d.cls}</div>
+        <div><strong>Phone:</strong> ${d.phone}</div>
+        <div><strong>Father's Name:</strong> ${d.father}</div>
+        <div><strong>Mother's Name:</strong> ${d.mother}</div>
+        <div><strong>School:</strong> ${d.school}</div>
+    `;
+
+    // যদি m (মাস) থাকে, তার মানে এটি পেমেন্ট রিসিট। তখন টেবিল দেখাবে।
+    // যদি m খালি থাকে, তার মানে এটি রেজিস্ট্রেশন। তখন টেবিল হাইড থাকবে।
+    if (m) {
+        getEl('inv_table').style.display = 'block';
+        getEl('inv_desc').innerText = `Monthly Fee (${m})`;
         getEl('inv_amt').innerText = a + " ৳";
-        getEl('inv_date').innerText = new Date().toLocaleDateString('en-GB');
-        window.print();
+    } else {
+        getEl('inv_table').style.display = 'none'; // রেজিস্ট্রেশনের সময় টেবিল দেখাবে না
     }
+
+    getEl('inv_date').innerText = new Date().toLocaleDateString('en-GB');
+    window.print();
+}
+
 
     window.printData = (id) => {
         getEl('info_header_print').style.display = 'block';
