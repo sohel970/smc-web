@@ -16,8 +16,8 @@
         nav { background: var(--primary); color: white; padding: 10px 25px; display: flex; justify-content: space-between; align-items: center; }
         .btn-logout { background: #ef4444; color: white; padding: 8px 18px; font-size: 0.85rem; border-radius: 6px; cursor: pointer; border: none; font-weight: 600; }
         .container { max-width: 1100px; margin: 2rem auto; padding: 0 1rem; }
-        .tabs { display: flex; gap: 10px; margin-bottom: 2rem; background: #e2e8f0; padding: 5px; border-radius: 8px; }
-        .tab-btn { flex: 1; padding: 12px; border: none; background: transparent; cursor: pointer; font-weight: 600; border-radius: 6px; transition: 0.3s; }
+        .tabs { display: flex; gap: 10px; margin-bottom: 2rem; background: #e2e8f0; padding: 5px; border-radius: 8px; flex-wrap: wrap; }
+        .tab-btn { flex: 1; min-width: 100px; padding: 12px; border: none; background: transparent; cursor: pointer; font-weight: 600; border-radius: 6px; transition: 0.3s; }
         .tab-btn.active { background: white; color: var(--accent); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .section { display: none; background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
         .section.active { display: block; }
@@ -26,6 +26,7 @@
         label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.85rem; color: #64748b; }
         input, select { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 1rem; box-sizing: border-box; }
         .btn { padding: 14px; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; width: 100%; transition: 0.3s; display: flex; align-items: center; justify-content: center; }
+        .btn:disabled { background: #94a3b8; cursor: not-allowed; }
         .btn-primary { background: var(--accent); color: white; }
         .btn-success { background: var(--secondary); color: white; }
         .btn-info { background: #6366f1; color: white; margin-top: 10px; }
@@ -33,9 +34,64 @@
         table th, table td { border: 1px solid #e2e8f0; padding: 12px; text-align: left; }
         table th { background: #f1f5f9; }
         .suggestion-item { padding: 12px; cursor: pointer; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; }
-        .highlight-row { background-color: #fef08a !important; transition: background 0.5s; }
-        @media print { body * { visibility: hidden; } #invoice-print, #info_table_container, #info_table_container *, #result_print_container, #result_print_container * { visibility: visible; } #invoice-print, #info_table_container, #result_print_container { position: absolute; left: 0; top: 0; width: 100%; display: block !important; } }
-        #invoice-print { display: none; padding: 40px; color: black; }
+        .sub-tab-container { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .sub-tab { padding: 8px 15px; border: none; background: #f1f5f9; cursor: pointer; border-radius: 5px; font-weight: 600; font-size: 0.85rem; }
+        .sub-tab.active { background: var(--accent); color: white; }
+        .marks-input { width: 80px !important; text-align: center; padding: 5px !important; }
+
+
+        
+@media print {
+    /* প্রিন্টের সময় অপ্রয়োজনীয় সব এলিমেন্ট পুরোপুরি হাইড */
+    body > *:not(#invoice-print):not(#print-area):not(#reports) {
+        display: none !important;
+    }
+
+    /* প্রিন্ট এরিয়াগুলোকে দৃশ্যমান করা এবং পজিশন ঠিক করা */
+    #invoice-print, #print-area, #reports {
+        visibility: visible !important;
+        display: block !important;
+        position: static !important; /* static দিলে কেটে যাওয়ার ভয় থাকে না */
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: visible !important;
+    }
+
+    /* বডিতে ক্লাস থাকলে শুধু সেই অংশটি সলিডভাবে দেখাবে */
+    body:not(.printing-invoice) #invoice-print { display: none !important; }
+    body:not(.printing-report) #print-area { display: none !important; }
+
+    /* ব্যাকগ্রাউন্ড কালার এবং ডিজাইন প্রিন্টে দেখানোর জন্য */
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color-adjust: exact !important;
+    }
+
+    /* পেজ মার্জিন সেট করা */
+    @page {
+        size: A4;
+        margin: 10mm; /* সাইড থেকে যাতে না কাটে সেজন্য ১০ মিলিমিটার মার্জিন */
+    }
+}
+
+
+        
+   
+        #invoice-print, #print-area { display: none; padding: 40px; color: black; }
+        .spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid #fff;
+    border-right-color: transparent;
+    border-radius: 50%;
+    display: inline-block;
+    vertical-align: middle;
+    margin-left: 5px;
+    animation: spin-anim 0.75s linear infinite;
+}
+@keyframes spin-anim { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
@@ -56,9 +112,9 @@
         <div class="tabs">
             <button class="tab-btn active" id="tab-reg" onclick="showSection('add-student')">Register</button>
             <button class="tab-btn" id="tab-fees" onclick="showSection('payment')">Fees</button>
+            <button class="tab-btn" id="tab-res" onclick="showSection('result-section')">Result</button>
             <button class="tab-btn" id="tab-info" onclick="showSection('info-section')">Information</button>
             <button class="tab-btn" id="tab-rep" onclick="showSection('reports')">Reports</button>
-            <button class="tab-btn" id="tab-res" onclick="showSection('result-section')">Result</button>
         </div>
 
         <div id="add-student" class="section active">
@@ -66,12 +122,33 @@
                 <div class="form-group"><label>Student Name</label><input type="text" id="s_name"></div>
                 <div class="form-group"><label>Father's Name</label><input type="text" id="s_father"></div>
                 <div class="form-group"><label>Mother's Name</label><input type="text" id="s_mother"></div>
-                <div class="form-group"><label>Class</label><input type="number" id="s_class"></div>
+                <div class="form-group">
+    <label>Class</label>
+    <select id="s_class">
+        <option value="">Select Class</option>
+        <option value="1">Class 1</option>
+        <option value="2">Class 2</option>
+        <option value="3">Class 3</option>
+        <option value="4">Class 4</option>
+        <option value="5">Class 5</option>
+        <option value="6">Class 6</option>
+        <option value="7">Class 7</option>
+        <option value="8">Class 8</option>
+        <option value="9">Class 9</option>
+        <option value="10">Class 10</option>
+        <option value="11">Class 11</option>
+        <option value="12">Class 12</option>
+    </select>
+</div>
                 <div class="form-group"><label>School Name</label><input type="text" id="s_school"></div>
                 <div class="form-group"><label>Contact No</label><input type="text" id="s_phone"></div>
                 <div class="form-group"><label>Monthly Fee</label><input type="number" id="s_fee" value="2000"></div>
             </div>
-            <button class="btn btn-primary" id="reg-btn" onclick="saveStudent()">Register Student</button>
+           <button class="btn btn-primary" id="reg-btn" onclick="saveStudent()">
+    <span id="reg-btn-text">Register Student</span>
+    <span id="reg-spinner" style="display: none;" class="spinner-border spinner-border-sm"></span>
+</button>
+            <!-- <button class="btn btn-primary" id="reg-btn" onclick="saveStudent()">Register Student</button> -->
         </div>
 
         <div id="payment" class="section">
@@ -85,21 +162,114 @@
                 <div class="form-group"><label>Month</label><select id="pay_month"><option>January</option><option>February</option><option>March</option><option>April</option><option>May</option><option>June</option><option>July</option><option>August</option><option>September</option><option>October</option><option>November</option><option>December</option><option>Others</option></select></div>
                 <div class="form-group"><label>Amount</label><input type="number" id="pay_amount"></div>
             </div>
-            <button class="btn btn-success" id="pay-btn" onclick="processPayment()">Confirm Payment</button>
+           <button class="btn btn-success" id="pay-btn" onclick="processPayment()">
+    <span id="pay-btn-text">Confirm Payment</span>
+    <span id="pay-spinner" style="display: none;" class="spinner-border spinner-border-sm"></span>
+</button>
+        </div>
+
+        <div id="result-section" class="section">
+            <div class="sub-tab-container">
+                <button class="sub-tab active" id="sub-tab-input" onclick="showSubResult('input')">Input Result</button>
+                <button class="sub-tab" id="sub-tab-print" onclick="showSubResult('print')">Print Result</button>
+            </div>
+            <div id="res-input-content">
+                <div class="grid">
+                    <div class="form-group"><label>Exam Name</label><input type="text" id="res_exam_name" placeholder="e.g. Model Test-1"></div>
+                    <div class="form-group">
+    <label>Class</label>
+    <select id="res_class" onchange="loadStudentListForResult()">
+        <option value="">Select Class</option>
+        <option value="1">Class 1</option>
+        <option value="2">Class 2</option>
+        <option value="3">Class 3</option>
+        <option value="4">Class 4</option>
+        <option value="5">Class 5</option>
+        <option value="6">Class 6</option>
+        <option value="7">Class 7</option>
+        <option value="8">Class 8</option>
+        <option value="9">Class 9</option>
+        <option value="10">Class 10</option>
+        <option value="11">Class 11</option>
+        <option value="12">Class 12</option>
+    </select>
+</div>
+                    <!-- <div class="form-group"><label>Class</label><input type="number" id="res_class" onchange="loadStudentListForResult()"></div> -->
+                </div>
+                <div id="res_list_container"></div>
+                <button class="btn btn-success" style="margin-top:20px;" id="save-res-btn" onclick="saveResults()" disabled>Save/Update Results</button>
+            </div>
+            <div id="res-print-content" style="display:none;">
+                <div class="grid">
+                    <div class="form-group"><label>Select Exam</label><select id="print_exam_list"></select></div>
+                    <div class="form-group">
+    <label>Class</label>
+    <select id="print_res_class">
+        <option value="">Select Class</option>
+     <option value="1">Class 1</option>
+        <option value="2">Class 2</option>
+        <option value="3">Class 3</option>
+        <option value="4">Class 4</option>
+        <option value="5">Class 5</option>
+        <option value="6">Class 6</option>
+        <option value="7">Class 7</option>
+        <option value="8">Class 8</option>
+        <option value="9">Class 9</option>
+        <option value="10">Class 10</option>
+        <option value="11">Class 11</option>
+        <option value="12">Class 12</option>
+    </select>
+</div>
+                    <!-- <div class="form-group"><label>Class</label><input type="number" id="print_res_class"></div> -->
+                </div>
+                <button class="btn btn-primary" onclick="generateResultSheet()">Search Result Sheet</button>
+                <hr style="margin:20px 0;">
+                <div class="form-group"><label>Student ID (For Progress)</label><input type="text" id="single_stu_id" placeholder="SMC-XXXX"></div>
+                <button class="btn btn-info" onclick="generateStudentHistory()">View Student Progress</button>
+                <div id="result_view_area"></div>
+            </div>
         </div>
 
         <div id="info-section" class="section">
             <div class="grid">
                 <div class="form-group"><label>Search Type</label><select id="info_type" onchange="toggleInfoFields()"><option value="all">All Student List</option><option value="class">Class wise Student List</option><option value="paid">Month wise Paid Students</option><option value="unpaid">Month wise Unpaid Students</option></select></div>
-                <div class="form-group" id="class_field" style="display:none;"><label>Class</label><input type="number" id="info_class_val"></div>
+                <div class="form-group" id="class_field" style="display:none;"><label>Class</label>
+                    <select id="info_class_val">
+        <option value="">Select Class</option>
+        <option value="all">All Class</option> 
+        <option value="1">Class 1</option>
+        <option value="2">Class 2</option>
+        <option value="3">Class 3</option>
+        <option value="4">Class 4</option>
+        <option value="5">Class 5</option>
+        <option value="6">Class 6</option>
+        <option value="7">Class 7</option>
+        <option value="8">Class 8</option>
+        <option value="9">Class 9</option>
+        <option value="10">Class 10</option>
+        <option value="11">Class 11</option>
+        <option value="12">Class 12</option>
+    </select>
+                    
+                    <!-- <input type="number" id="info_class_val"> -->
+                </div>
                 <div class="form-group" id="month_field" style="display:none;"><label>Month</label><select id="info_month_val"><option>January</option><option>February</option><option>March</option><option>April</option><option>May</option><option>June</option><option>July</option><option>August</option><option>September</option><option>October</option><option>November</option><option>December</option></select></div>
             </div>
             <button class="btn btn-primary" onclick="generateInfo()">Find Information</button>
-            <button class="btn btn-info" onclick="window.print()">Print This List</button>
             <div id="info_table_container">
-                <div id="info_header_print" style="text-align:center; display:none;"><h2>SOHEL MATH CARE</h2><h3 id="info_sub_title"></h3><hr></div>
                 <table><thead><tr id="info_head"></tr></thead><tbody id="info_body"></tbody></table>
             </div>
+            <div id="info_table_container">
+    <table>
+        <thead><tr id="info_head"></tr></thead>
+        <tbody id="info_body"></tbody>
+    </table>
+</div>
+
+<d
+ style="margin-top: 20px; text-align: center;">
+    <button class="btn btn-info" id="print-info-btn" style="display:none; width: 200px; margin: 0 auto;" onclick="printInfoTable()">Print This List</button>
+</d>
         </div>
 
         <div id="reports" class="section">
@@ -109,46 +279,96 @@
                 <div class="form-group"><label>By Month</label><select id="rep_month" onchange="filterReports()"><option value="">All Months</option><option>January</option><option>February</option><option>March</option><option>April</option><option>May</option><option>June</option><option>July</option><option>August</option><option>September</option><option>October</option><option>November</option><option>December</option></select></div>
             </div>
             <table><thead><tr><th>Date</th><th>ID</th><th>Name</th><th>Month</th><th>Amount</th></tr></thead><tbody id="history_body"></tbody><tfoot><tr style="background:#f8fafc; font-weight:bold;"><td colspan="4" style="text-align:right">Total Collection:</td><td id="total_amount">0 ৳</td></tr></tfoot></table>
+         <!-- <div style="text-align: right; margin-bottom: 10px;"> -->
+    <button class="btn btn-primary" onclick="printReport()"><i class="fas fa-print"></i> Print Report
+    <!-- </button> -->
+</div>
+        </div>
+       
+    </div>
+</div>
+<div id="invoice-print" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; color: #333;"> 
+    <div style="border: 2px solid #444; padding: 20px; border-radius: 10px; background: #fff;">
+        <div style="text-align: center; border-bottom: 2px solid #444; padding-bottom: 10px; margin-bottom: 20px;">
+            <h1 style="margin: 0; color: #1a73e8; font-size: 28px;">SOHEL MATH CARE</h1>
+            <p style="margin: 5px 0; font-style: italic;">Where Logic Meets Success</p>
+            <div style="display: inline-block; background: #444; color: #fff; padding: 5px 15px; border-radius: 20px; font-weight: bold; margin-top: 10px;" id="inv_type_title">
+                PAYMENT RECEIPT
+            </div>
         </div>
 
-        <div id="result-section" class="section">
-            <div class="tabs" style="background: #cbd5e1; margin-bottom: 1.5rem;">
-                <button class="tab-btn active" id="sub-tab-input" onclick="showResultSub('input')">Input Result</button>
-                <button class="tab-btn" id="sub-tab-print" onclick="showResultSub('print')">Print Result</button>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; font-size: 15px;">
+            <div id="inv_content">
+                </div>
+            <div style="text-align: right;">
+                <p><strong>Receipt Date:</strong> <span id="inv_date"></span></p>
+                <p><strong>Status:</strong> <span style="color: green; font-weight: bold;">PAID</span></p>
             </div>
-            <div id="res-input-area">
-                <div class="grid" style="grid-template-columns: 2fr 1fr 1.5fr;">
-                    <div class="form-group"><label>Exam Name</label><input type="text" id="res_exam_name" placeholder="e.g. Model Test 1"></div>
-                    <div class="form-group"><label>Class</label><input type="number" id="res_class_select"></div>
-                    <div class="form-group"><label>Smart Search (Last 3 Digits)</label><input type="text" id="res_quick_search" onkeyup="highlightStudent(this.value)" placeholder="e.g. 025"></div>
-                </div>
-                <button class="btn btn-primary" onclick="loadResultStudents()">Load Student List</button>
-                <div id="bulk_input_container" style="margin-top:20px; max-height: 400px; overflow-y: auto; border: 1px solid #ddd;">
-                    <table id="input_table" style="display:none;"><thead><tr><th>ID</th><th>Name</th><th>Marks</th></tr></thead><tbody id="bulk_input_body"></tbody></table>
-                </div>
-                <button class="btn btn-success" id="save-res-btn" style="margin-top:20px; display:none;" onclick="saveBulkResults()">Save/Update All Results</button>
+        </div>
+
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
+            <thead>
+                <tr style="background: #f2f2f2;">
+                    <th style="border: 1px solid #ddd; padding: 12px; text-align: left;">Description</th>
+                    <th style="border: 1px solid #ddd; padding: 12px; text-align: right;">Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="border: 1px solid #ddd; padding: 12px;" id="inv_desc"></td>
+                    <td style="border: 1px solid #ddd; padding: 12px; text-align: right; font-weight: bold; font-size: 18px;" id="inv_amt"></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div style="margin-top: 60px; display: flex; justify-content: space-between; align-items: flex-end;">
+            <div style="font-size: 12px; color: #777;">
+                <p>Note: This is a computer-generated receipt.</p>
+                <p>Thank you for choosing Sohel Math Care.</p>
             </div>
-            <div id="res-print-area" style="display:none;">
-                <div class="grid">
-                    <div class="form-group"><label>Exam Name</label><select id="print_exam_select"></select></div>
-                    <div class="form-group"><label>Class</label><input type="number" id="print_class_select"></div>
-                </div>
-                <button class="btn btn-info" onclick="generateResultSheet()">Generate & Print Result Sheet</button>
-                <div id="result_print_container" style="margin-top:20px;">
-                    <div id="sheet_header" style="text-align:center; display:none;"><h2>SOHEL MATH CARE</h2><h3 id="sheet_title"></h3><hr></div>
-                    <table id="sheet_table"><thead><tr><th>Rank</th><th>ID</th><th>Name</th><th>Marks</th></tr></thead><tbody id="sheet_body"></tbody></table>
+            <div style="text-align: center; width: 200px;">
+                <div style="border-top: 1px solid #000; padding-top: 5px;">
+                    <strong>Authorized Signature</strong>
                 </div>
             </div>
         </div>
     </div>
 </div>
-
-<div id="invoice-print">
-    <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px;"><h1>SOHEL MATH CARE</h1><p id="inv_type_title" style="font-weight:bold;"></p></div>
+<!-- <div id="invoice-print">
+    <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px;">
+        <h1>SOHEL MATH CARE</h1>
+        <p id="inv_type_title" style="font-weight:bold;"></p>
+    </div>
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; line-height: 1.8;" id="inv_content"></div>
-    <div id="inv_table" style="margin-top:20px;"><table style="width:100%; border:1px solid #000; border-collapse:collapse;"><tr style="background:#eee;"><th style="border:1px solid #000; padding:10px;">Description</th><th style="border:1px solid #000; padding:10px; text-align:right;">Amount</th></tr><tr><td style="border:1px solid #000; padding:10px;" id="inv_desc"></td><td style="border:1px solid #000; padding:10px; text-align:right;" id="inv_amt"></td></tr></table></div>
-    <div style="margin-top: 50px; display: flex; justify-content: space-between;"><p>Date: <span id="inv_date"></span></p><p style="border-top:1px solid #000; width:200px; text-align:center;">Authorized Signature</p></div>
+    <div id="inv_table" style="margin-top:20px;">
+        <table style="width:100%; border:1px solid #000; border-collapse:collapse;">
+            <tr style="background:#eee;">
+                <th style="border:1px solid #000; padding:10px;">Description</th>
+                <th style="border:1px solid #000; padding:10px; text-align:right;">Amount</th>
+            </tr>
+            <tr>
+                <td style="border:1px solid #000; padding:10px;" id="inv_desc"></td>
+                <td style="border:1px solid #000; padding:10px; text-align:right;" id="inv_amt"></td>
+            </tr>
+        </table>
+    </div>
+    <div style="margin-top: 50px; display: flex; justify-content: space-between;">
+        <p>Date: <span id="inv_date"></span></p>
+        <p style="border-top:1px solid #000; width:200px; text-align:center;">Authorized Signature</p>
+    </div>
+</div> -->
+
+<div id="print-area">
+    <div style="text-align:center;">
+        <h1>SOHEL MATH CARE</h1>
+        <h3 id="print_title"></h3>
+        <hr>
+    </div>
+    <div id="print_content_area"></div>
 </div>
+
+
+
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -169,214 +389,441 @@
     const auth = getAuth(app);
     const getEl = (id) => document.getElementById(id);
 
-    // --- AUTH ---
-    getEl('login-btn').onclick = async () => {
-        const email = getEl('login-email').value, pass = getEl('login-pass').value;
-        try { await signInWithEmailAndPassword(auth, email, pass); } 
-        catch (e) { alert("Error: " + e.message); }
-    };
+    // --- AUTH & NAVIGATION ---
     onAuthStateChanged(auth, (user) => {
         getEl('login-screen').style.display = user ? 'none' : 'flex';
         getEl('main-app').style.display = user ? 'block' : 'none';
-        if(user) window.filterReports();
+        if(user) { fetchExamNames(); window.filterReports(); }
     });
+
+    getEl('login-btn').onclick = async () => {
+        const email = getEl('login-email').value, pass = getEl('login-pass').value;
+        try { await signInWithEmailAndPassword(auth, email, pass); } catch(e) { alert(e.message); }
+    };
     getEl('logout-btn').onclick = () => signOut(auth);
 
-    // --- NAVIGATION ---
     window.showSection = (id) => {
         document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         getEl(id).classList.add('active');
-        const tId = { 'add-student':'tab-reg', 'payment':'tab-fees', 'info-section':'tab-info', 'reports':'tab-rep', 'result-section':'tab-res' }[id];
+        const tId = { 'add-student':'tab-reg', 'payment':'tab-fees', 'result-section':'tab-res', 'info-section':'tab-info', 'reports':'tab-rep' }[id];
         getEl(tId).classList.add('active');
     };
 
-    // --- REGISTRATION (SMART ID & YEAR) ---
+    // --- REGISTRATION ---
+
     window.saveStudent = async () => {
-        const btn = getEl('reg-btn'), now = new Date();
-        let year = now.getFullYear();
-        if (now.getMonth() + 1 >= 11) {
-            if (confirm(`এখন ${year} সাল। আপনি কি আগামী বছর (${year+1}) এর জন্য ভর্তি করছেন?`)) year += 1;
-        }
-        const s = {
-            name: getEl('s_name').value, cls: getEl('s_class').value, father: getEl('s_father').value,
-            mother: getEl('s_mother').value, school: getEl('s_school').value, phone: getEl('s_phone').value,
-            fee: getEl('s_fee').value, year: year.toString()
-        };
-        if(!s.name || !s.cls) return alert("Fill mandatory fields!");
-        btn.disabled = true;
-        try {
-            const q = query(collection(db, "students"), where("cls", "==", s.cls), where("year", "==", s.year), orderBy("customId", "desc"), limit(1));
-            const snap = await getDocs(q);
-            let n = 1;
-            if(!snap.empty) n = parseInt(snap.docs[0].data().customId.slice(-4)) + 1;
-            const cid = `SMC-${s.year.slice(-2)}-${s.cls}${String(n).padStart(4, '0')}`;
-            await addDoc(collection(db, "students"), { ...s, customId: cid, monthlyFee: parseFloat(s.fee), createdAt: serverTimestamp() });
-            printInvoice(s, cid, s.fee, "Registration Confirmation");
-            location.reload();
-        } catch (e) { alert(e.message); btn.disabled = false; }
+    const btn = getEl('reg-btn');
+    const btnText = getEl('reg-btn-text');
+    const spinner = getEl('reg-spinner');
+
+    const s = { 
+        name: getEl('s_name').value, 
+        father: getEl('s_father').value, 
+        mother: getEl('s_mother').value, 
+        cls: getEl('s_class').value, 
+        school: getEl('s_school').value, 
+        phone: getEl('s_phone').value, 
+        fee: getEl('s_fee').value 
     };
+
+    // বাধ্যতামূলক ফিল্ড চেক
+    if(!s.name || !s.cls || !s.fee) return alert("Fill mandatory fields (Name, Class, Fee)!");
+
+    // লোডিং স্টাইল শুরু
+    btn.disabled = true; 
+    btnText.innerText = "Saving Data...";
+    spinner.style.display = "inline-block";
+
+    try {
+        // আইডি জেনারেশন লজিক (আপনার আগের কোড অনুযায়ী)
+       // আইডি জেনারেশন লজিক (এটি saveStudent ফাংশনের ভেতরে আপডেট করুন)
+const q = query(
+    collection(db, "students"), 
+    where("cls", "==", s.cls), 
+    orderBy("createdAt", "desc"), // customId এর বদলে createdAt দিয়ে সর্ট করুন
+    limit(1)
+);
+
+const snap = await getDocs(q);
+
+let n = 1; 
+if (!snap.empty) {
+    const lastStudent = snap.docs[0].data();
+    // আইডি থেকে শেষ ৪টি সংখ্যা বের করে ১ যোগ করা
+    // যেমন: SMC-10001 থেকে 0001 নিয়ে integer এ রূপান্তর
+    const lastIdStr = lastStudent.customId;
+    const lastSerial = parseInt(lastIdStr.slice(-4)); 
+    n = lastSerial + 1;
+}
+
+const cid = `SMC-${s.cls}${String(n).padStart(4, '0')}`;
+
+        // ডাটা সেভ
+        await addDoc(collection(db, "students"), { 
+            ...s, 
+            customId: cid, 
+            monthlyFee: parseFloat(s.fee), 
+            createdAt: serverTimestamp() 
+        });
+
+        // ইনভয়েস প্রিন্ট কল (সেভ হওয়ার পর)
+        // আমরা আগে যে ১ পেজের প্রিন্ট ফাংশন তৈরি করেছিলাম সেটি কল হবে
+        printInvoice(s, cid, s.fee, "Admission & Registration");
+
+        // ডাটা সেভ হওয়ার পর ইনপুটগুলো রিসেট করা
+        alert("Student Saved Successfully! ID: " + cid);
+        
+        // প্রিন্ট ডায়ালগ আসার জন্য সামান্য সময় দিয়ে রিলোড
+        setTimeout(() => { location.reload(); }, 1500);
+
+    } catch (e) { 
+        console.error(e);
+        alert("Error: " + e.message); 
+        btn.disabled = false; 
+        btnText.innerText = "Register Student";
+        spinner.style.display = "none";
+    }
+};
+    // window.saveStudent = async () => {
+    //     const btn = getEl('reg-btn');
+    //     const s = { name: getEl('s_name').value, father: getEl('s_father').value, mother: getEl('s_mother').value, cls: getEl('s_class').value, school: getEl('s_school').value, phone: getEl('s_phone').value, fee: getEl('s_fee').value };
+    //     if(!s.name || !s.cls) return alert("Fill mandatory fields!");
+    //     btn.disabled = true; btn.innerHTML = "Saving...";
+    //     try {
+    //         const q = query(collection(db, "students"), where("cls", "==", s.cls), orderBy("customId", "desc"), limit(1));
+    //         const snap = await getDocs(q);
+    //         let n = 1; if(!snap.empty) n = parseInt(snap.docs[0].data().customId.split(s.cls)[1]) + 1;
+    //         const cid = `SMC-${s.cls}${String(n).padStart(4, '0')}`;
+    //         await addDoc(collection(db, "students"), { ...s, customId: cid, monthlyFee: parseFloat(s.fee), createdAt: serverTimestamp() });
+    //         printInvoice(s, cid, s.fee, "Registration Confirmation");
+    //         location.reload();
+    //     } catch (e) { alert(e.message); btn.disabled = false; }
+    // };
 
     // --- PAYMENT ---
     let selectedS = null;
     window.handleSearch = async (v) => {
-        const box = getEl('suggestion_box');
-        if(v.length < 1) { box.innerHTML = ''; return; }
-        const snap = await getDocs(collection(db, "students"));
-        box.innerHTML = '';
+        const box = getEl('suggestion_box'); if(v.length < 1) { box.innerHTML = ''; return; }
+        const snap = await getDocs(collection(db, "students")); box.innerHTML = '';
         snap.forEach(doc => {
-            const d = doc.data();
-            if(d.name.toLowerCase().includes(v.toLowerCase()) || d.customId.toLowerCase().includes(v.toLowerCase())) {
-                const div = document.createElement('div');
-                div.className = 'suggestion-item';
+            const d = doc.data(); if(d.name.toLowerCase().includes(v.toLowerCase()) || d.customId.toLowerCase().includes(v.toLowerCase())) {
+                const div = document.createElement('div'); div.className = 'suggestion-item';
                 div.innerHTML = `<span>${d.name}</span> <strong>${d.customId}</strong>`;
-                div.onclick = () => {
-                    selectedS = d;
-                    getEl('selected_info').style.display = 'block';
-                    getEl('selected_info').innerHTML = `<b>Selected:</b> ${d.name} (${d.customId})`;
-                    getEl('pay_amount').value = d.monthlyFee;
-                    getEl('search_input').value = d.customId;
-                    box.innerHTML = '';
-                };
+                div.onclick = () => { selectedS = d; getEl('selected_info').style.display = 'block'; getEl('selected_info').innerHTML = `<b>Selected:</b> ${d.name} (${d.customId})`; getEl('pay_amount').value = d.monthlyFee; getEl('search_input').value = d.customId; box.innerHTML = ''; };
                 box.appendChild(div);
             }
         });
     };
 
-    window.processPayment = async () => {
-        const m = getEl('pay_month').value, a = getEl('pay_amount').value;
-        if(!selectedS) return alert("Select Student!");
-        try {
-            await addDoc(collection(db, "payments"), { studentId: selectedS.customId, studentName: selectedS.name, cls: selectedS.cls, amount: parseFloat(a), month: m, date: new Date().toLocaleDateString('en-GB'), timestamp: serverTimestamp() });
-            printInvoice(selectedS, selectedS.customId, a, `Fees Receipt - ${m}`, m);
-            location.reload();
-        } catch (e) { alert(e.message); }
-    };
+   window.processPayment = async () => {
+    const btn = getEl('pay-btn');
+    const btnText = getEl('pay-btn-text');
+    const spinner = getEl('pay-spinner');
 
-    // --- RESULT SYSTEM (SMART HIGHLIGHT) ---
-    window.showResultSub = (t) => {
-        getEl('res-input-area').style.display = t === 'input' ? 'block' : 'none';
-        getEl('res-print-area').style.display = t === 'print' ? 'block' : 'none';
-        getEl('sub-tab-input').classList.toggle('active', t === 'input');
-        getEl('sub-tab-print').classList.toggle('active', t === 'print');
-        if(t === 'print') loadExamDropdown();
-    };
+    const m = getEl('pay_month').value;
+    const a = getEl('pay_amount').value;
+    
+    // টাইপ ড্রপডাউন না থাকলে ডিফল্ট 'Monthly Fee' হবে
+    const typeEl = getEl('pay_type');
+    const type = typeEl ? typeEl.value : "Monthly Fee";
 
-    window.loadResultStudents = async () => {
-        const cls = getEl('res_class_select').value, exam = getEl('res_exam_name').value;
-        if(!cls || !exam) return alert("Fill Class and Exam!");
-        const tbody = getEl('bulk_input_body'); tbody.innerHTML = 'Loading...';
-        getEl('input_table').style.display = 'table'; getEl('save-res-btn').style.display = 'block';
+    if(!selectedS) return alert("স্টুডেন্ট আগে সিলেক্ট করুন!");
+    if(!m || !a) return alert("মাস এবং টাকার পরিমাণ দিন!");
+
+    // লোডিং ইফেক্ট শুরু
+    if(btn) btn.disabled = true;
+    if(btnText) btnText.innerText = "Saving Data...";
+    if(spinner) spinner.style.display = "inline-block";
+
+    try {
+        // ১. পেমেন্ট ডুপ্লিকেট কি না চেক করা (যদি Others না হয়)
+        if(type !== 'Others') {
+            const q = query(
+                collection(db, "payments"), 
+                where("studentId", "==", selectedS.customId), 
+                where("month", "==", m),
+                where("type", "==", "Monthly Fee")
+            );
+            const checkSnap = await getDocs(q);
+            if(!checkSnap.empty) {
+                alert(selectedS.name + "-এর " + m + " মাসের বেতন আগেই নেওয়া হয়েছে!");
+                resetPayUI();
+                return;
+            }
+        }
+
+        // ২. ডাটাবেসে সেভ করার জন্য অবজেক্ট তৈরি
+        const paymentData = { 
+            studentId: selectedS.customId, 
+            name: selectedS.name, 
+            cls: selectedS.cls, 
+            phone: selectedS.phone || "N/A",
+            amount: parseFloat(a), 
+            month: m, 
+            type: type,
+            date: new Date().toLocaleDateString('en-GB'), 
+            timestamp: serverTimestamp() 
+        };
+
+        // ৩. ফায়ারবেসে সেভ করা
+        await addDoc(collection(db, "payments"), paymentData);
+
+        // ৪. ইনভয়েস প্রিন্ট কল করা (বডিতে ক্লাস যোগ করে)
+        document.body.classList.add('printing-invoice');
         
-        const year = new Date().getFullYear().toString();
-        const sSnap = await getDocs(query(collection(db, "students"), where("cls", "==", cls), where("year", "==", year)));
-        const rSnap = await getDocs(query(collection(db, "results"), where("exam", "==", exam), where("cls", "==", cls)));
-        const existing = {}; rSnap.forEach(d => existing[d.data().studentId] = d.data().marks);
+        // ইনভয়েস ফাংশনটি সঠিক ডাটা দিয়ে কল করা
+        printInvoice(paymentData, selectedS.customId, a, `Fees Receipt - ${m}`, m);
 
-        tbody.innerHTML = '';
-        sSnap.forEach(doc => {
-            const s = doc.data();
-            const mark = existing[s.customId] || "";
-            tbody.innerHTML += `<tr id="row-${s.customId.slice(-3)}">
-                <td>${s.customId}</td><td>${s.name}</td>
-                <td><input type="number" class="res-input" data-id="${s.customId}" data-name="${s.name}" value="${mark}" style="width:80px;"></td>
-            </tr>`;
+        // ৫. রিলোড করার আগে সময় দেওয়া (যাতে ইনভয়েস ওপেন হয়)
+        setTimeout(() => {
+            alert("পেমেন্ট সফলভাবে সেভ হয়েছে!");
+            location.reload(); 
+        }, 3000); // ৩ সেকেন্ড সময় দেওয়া হলো
+
+    } catch (e) { 
+        console.error("Error:", e);
+        alert("এরর: " + e.message); 
+        resetPayUI();
+    }
+
+    function resetPayUI() {
+        if(btn) btn.disabled = false;
+        if(btnText) btnText.innerText = "Confirm Payment";
+        if(spinner) spinner.style.display = "none";
+    }
+};
+    
+    // window.processPayment = async () => {
+    //     const btn = getEl('pay-btn'), m = getEl('pay_month').value, a = getEl('pay_amount').value;
+    //     if(!selectedS) return alert("Select Student!");
+    //     btn.disabled = true;
+    //     try {
+    //         await addDoc(collection(db, "payments"), { studentId: selectedS.customId, studentName: selectedS.name, cls: selectedS.cls, amount: parseFloat(a), month: m, date: new Date().toLocaleDateString('en-GB'), timestamp: serverTimestamp() });
+    //         printInvoice(selectedS, selectedS.customId, a, `Fees Receipt - ${m}`, m);
+    //         location.reload();
+    //     } catch (e) { alert(e.message); btn.disabled = false; }
+    // };
+
+    // --- RESULT LOGIC ---
+    window.showSubResult = (type) => {
+        getEl('res-input-content').style.display = type === 'input' ? 'block' : 'none';
+        getEl('res-print-content').style.display = type === 'print' ? 'block' : 'none';
+        document.querySelectorAll('.sub-tab').forEach(b => b.classList.remove('active'));
+        getEl(`sub-tab-${type}`).classList.add('active');
+    };
+
+    window.loadStudentListForResult = async () => {
+        const exam = getEl('res_exam_name').value, cls = getEl('res_class').value, container = getEl('res_list_container');
+        if(!exam || !cls) return; container.innerHTML = 'Loading...';
+        const sSnap = await getDocs(query(collection(db, "students"), where("cls", "==", cls)));
+        const mSnap = await getDocs(query(collection(db, "results"), where("exam", "==", exam), where("cls", "==", cls)));
+        let existingMarks = {}; mSnap.forEach(doc => { existingMarks[doc.data().stuId] = doc.data().marks; });
+        let html = `<table><thead><tr><th>ID</th><th>Name</th><th>Marks</th></tr></thead><tbody>`;
+        sSnap.forEach(doc => { const s = doc.data(); const val = existingMarks[s.customId] || '';
+            html += `<tr><td>${s.customId}</td><td>${s.name}</td><td><input type="number" class="marks-input" data-id="${s.customId}" data-name="${s.name}" value="${val}"></td></tr>`;
         });
+        container.innerHTML = html + `</tbody></table>`; getEl('save-res-btn').disabled = false;
     };
 
-    window.highlightStudent = (v) => {
-        if(v.length < 3) return;
-        const row = getEl(`row-${v}`);
-        if(row) {
-            row.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            row.classList.add('highlight-row');
-            row.querySelector('input').focus();
-            setTimeout(() => row.classList.remove('highlight-row'), 2000);
-        }
+    window.saveResults = async () => {
+        const exam = getEl('res_exam_name').value, cls = getEl('res_class').value, inputs = document.querySelectorAll('.marks-input'), btn = getEl('save-res-btn');
+        btn.disabled = true;
+        try {
+            for (let input of inputs) {
+                const stuId = input.dataset.id, marks = input.value; if(marks === "") continue;
+                const docId = `${exam}_${cls}_${stuId}`.replace(/\s+/g, '-');
+                await setDoc(doc(db, "results", docId), { exam, cls, stuId, marks: parseFloat(marks), stuName: input.dataset.name, timestamp: serverTimestamp() });
+            }
+            alert("Results Saved!"); fetchExamNames();
+        } catch (e) { alert(e.message); } btn.disabled = false;
     };
 
-    window.saveBulkResults = async () => {
-        const exam = getEl('res_exam_name').value, cls = getEl('res_class_select').value;
-        const inputs = document.querySelectorAll('.res-input');
-        for(let i of inputs) {
-            if(i.value === "") continue;
-            const resId = `${exam}-${i.dataset.id}`.replace(/\s+/g, '-');
-            await setDoc(doc(db, "results", resId), {
-                studentId: i.dataset.id, studentName: i.dataset.name,
-                exam: exam, cls: cls, marks: parseFloat(i.value), timestamp: serverTimestamp()
-            });
-        }
-        alert("Results Saved!");
-    };
-
-    async function loadExamDropdown() {
-        const snap = await getDocs(collection(db, "results"));
-        const exams = [...new Set(snap.docs.map(d => d.data().exam))];
-        getEl('print_exam_select').innerHTML = exams.map(e => `<option>${e}</option>`).join('');
+    async function fetchExamNames() {
+        const snap = await getDocs(collection(db, "results")), exams = new Set();
+        snap.forEach(d => exams.add(d.data().exam));
+        const select = getEl('print_exam_list'); select.innerHTML = '<option value="">Select Exam</option>';
+        exams.forEach(ex => { select.innerHTML += `<option value="${ex}">${ex}</option>`; });
     }
 
     window.generateResultSheet = async () => {
-        const exam = getEl('print_exam_select').value, cls = getEl('print_class_select').value;
-        const snap = await getDocs(query(collection(db, "results"), where("exam", "==", exam), where("cls", "==", cls)));
-        let results = []; snap.forEach(d => results.push(d.data()));
-        results.sort((a,b) => b.marks - a.marks);
-        getEl('sheet_body').innerHTML = results.map((r, i) => `<tr><td>${i+1}</td><td>${r.studentId}</td><td>${r.studentName}</td><td>${r.marks}</td></tr>`).join('');
-        getEl('sheet_title').innerText = `${exam} - Class ${cls}`;
-        getEl('sheet_header').style.display = 'block';
-        window.print();
+        const exam = getEl('print_exam_list').value, cls = getEl('print_res_class').value;
+        if(!exam || !cls) return alert("Select both");
+        const snap = await getDocs(query(collection(db, "results"), where("exam", "==", exam), where("cls", "==", cls), orderBy("marks", "desc")));
+        let html = `<button class="btn btn-info" onclick="printRes('Result Sheet - ${exam}')">Print Sheet</button><table><thead><tr><th>Rank</th><th>ID</th><th>Name</th><th>Marks</th></tr></thead><tbody>`;
+        let rank = 1; snap.forEach(doc => { const r = doc.data(); html += `<tr><td>${rank++}</td><td>${r.stuId}</td><td>${r.stuName}</td><td>${r.marks}</td></tr>`; });
+        getEl('result_view_area').innerHTML = html + `</tbody></table>`;
+    };
+
+    window.generateStudentHistory = async () => {
+        const sid = getEl('single_stu_id').value; if(!sid) return alert("Enter ID");
+        const snap = await getDocs(query(collection(db, "results"), where("stuId", "==", sid)));
+        let html = `<h4>History for ${sid}</h4><table><thead><tr><th>Exam</th><th>Marks</th></tr></thead><tbody>`;
+        snap.forEach(doc => { const r = doc.data(); html += `<tr><td>${r.exam}</td><td>${r.marks}</td></tr>`; });
+        getEl('result_view_area').innerHTML = html + `</tbody></table><button class="btn btn-info" onclick="printRes('Student Progress')">Print Progress</button>`;
     };
 
     // --- INFO & REPORTS ---
-    window.toggleInfoFields = () => {
-        const t = getEl('info_type').value;
-        getEl('class_field').style.display = (t === 'all') ? 'none' : 'block';
-        getEl('month_field').style.display = (t === 'paid' || t === 'unpaid') ? 'block' : 'none';
-    };
+    window.toggleInfoFields = () => { const t = getEl('info_type').value; getEl('class_field').style.display = (t === 'all') ? 'none' : 'block'; getEl('month_field').style.display = (t === 'paid' || t === 'unpaid') ? 'block' : 'none'; };
+    
 
-    window.generateInfo = async () => {
-        const t = getEl('info_type').value, c = getEl('info_class_val').value, m = getEl('info_month_val').value;
-        const body = getEl('info_body'), head = getEl('info_head');
-        body.innerHTML = 'Searching...';
-        const sSnap = await getDocs(collection(db, "students")), pSnap = await getDocs(collection(db, "payments"));
-        let st = [], py = []; sSnap.forEach(d => st.push(d.data())); pSnap.forEach(d => py.push(d.data()));
-        let res = [], title = t.toUpperCase();
-        if(t === 'all') res = st;
-        else if(t === 'class') { res = st.filter(s => s.cls == c); title += ` - Class ${c}`; }
-        else {
-            const pIds = py.filter(p => p.month === m && p.cls == c).map(p => p.studentId);
-            res = (t === 'paid') ? st.filter(s => pIds.includes(s.customId) && s.cls == c) : st.filter(s => !pIds.includes(s.customId) && s.cls == c);
-            title += ` - Class ${c}, Month: ${m}`;
+window.generateInfo = async () => {
+    const t = getEl('info_type').value, c = getEl('info_class_val').value, m = getEl('info_month_val').value;
+    const body = getEl('info_body'), head = getEl('info_head'); body.innerHTML = 'Searching...';
+    const sSnap = await getDocs(collection(db, "students")), pSnap = await getDocs(collection(db, "payments"));
+    let st = [], py = []; 
+    sSnap.forEach(d => st.push(d.data())); 
+    pSnap.forEach(d => py.push(d.data()));
+
+    let res = [];
+
+    if(t === 'all') {
+        res = st;
+    } 
+    else if(t === 'class') {
+        // যদি Class wise সিলেক্ট করা থাকে এবং ড্রপডাউনে 'all' থাকে
+        res = (c === 'all') ? st : st.filter(s => s.cls == c);
+    } 
+    else { 
+        // Paid বা Unpaid এর ক্ষেত্রে ফিল্টার
+        const pIds = py.filter(p => p.month === m && (c === 'all' || p.cls == c)).map(p => p.studentId);
+        
+        if(t === 'paid') {
+            res = st.filter(s => pIds.includes(s.customId) && (c === 'all' || s.cls == c));
+        } else {
+            res = st.filter(s => !pIds.includes(s.customId) && (c === 'all' || s.cls == c));
         }
-        head.innerHTML = `<th>ID</th><th>Name</th><th>Phone</th><th>Class</th>`;
-        body.innerHTML = '';
-        res.forEach(r => body.innerHTML += `<tr><td>${r.customId}</td><td>${r.name}</td><td>${r.phone}</td><td>${r.cls}</td></tr>`);
-        getEl('info_sub_title').innerText = title;
-    };
+    }
 
-    window.filterReports = async () => {
-        const n = getEl('rep_name').value.toLowerCase(), d = getEl('rep_date').value, m = getEl('rep_month').value;
-        const snap = await getDocs(query(collection(db, "payments"), orderBy("timestamp", "desc")));
-        const tbody = getEl('history_body');
-        tbody.innerHTML = ''; let tot = 0;
+    // টেবিল রেন্ডারিং আগের মতোই থাকবে...
+    head.innerHTML = `<th>ID</th><th>Name</th><th>Phone</th><th>Class</th>`; 
+    body.innerHTML = '';
+    res.forEach(r => body.innerHTML += `<tr><td>${r.customId}</td><td>${r.name}</td><td>${r.phone}</td><td>${r.cls}</td></tr>`);
+
+    // প্রিন্ট বাটন দেখানোর লজিক
+    getEl('print-info-btn').style.display = (res.length > 0) ? 'block' : 'none';
+};
+
+
+  window.filterReports = async () => {
+    const sName = document.getElementById('rep_name').value.toLowerCase();
+    const sDate = document.getElementById('rep_date').value;
+    const sMonth = document.getElementById('rep_month').value;
+    const tbody = document.getElementById('history_body');
+    const totalEl = document.getElementById('total_amount');
+
+    if (!tbody) return;
+    tbody.innerHTML = "<tr><td colspan='5' class='text-center'>Searching...</td></tr>";
+
+    try {
+        let q = query(collection(db, "payments"), orderBy("timestamp", "desc"));
+        const snap = await getDocs(q);
+        
+        tbody.innerHTML = "";
+        let total = 0;
+
         snap.forEach(doc => {
-            const p = doc.data();
-            const pDate = p.date;
-            if((p.studentName.toLowerCase().includes(n) || p.studentId.toLowerCase().includes(n)) && (!d || pDate === new Date(d).toLocaleDateString('en-GB')) && (!m || p.month === m)) {
-                tbody.innerHTML += `<tr><td>${p.date}</td><td>${p.studentId}</td><td>${p.studentName}</td><td>${p.month}</td><td>${p.amount} ৳</td></tr>`;
-                tot += p.amount;
+            const d = doc.data();
+            const dateMatch = !sDate || d.date === new Date(sDate).toLocaleDateString('en-GB');
+            const monthMatch = !sMonth || d.month === sMonth;
+            const nameIdMatch = !sName || 
+                                d.studentName?.toLowerCase().includes(sName) || 
+                                d.name?.toLowerCase().includes(sName) || 
+                                d.studentId?.toLowerCase().includes(sName);
+
+            // সব শর্ত মিললে তবেই রো দেখাবে
+            if (dateMatch && monthMatch && nameIdMatch) {
+                total += parseFloat(d.amount || 0);
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${d.date}</td>
+                        <td>${d.studentId}</td>
+                        <td>${d.studentName || d.name}</td>
+                        <td>${d.month}</td>
+                        <td>${d.amount} ৳</td>
+                    </tr>
+                `;
             }
         });
-        getEl('total_amount').innerText = tot + " ৳";
-    };
 
-    function printInvoice(d, id, a, t, m="") {
-        getEl('inv_type_title').innerText = t;
-        getEl('inv_content').innerHTML = `<div><strong>Name:</strong> ${d.name}</div><div><strong>ID:</strong> ${id}</div><div><strong>Class:</strong> ${d.cls}</div><div><strong>Phone:</strong> ${d.phone}</div>`;
-        if (m) { getEl('inv_table').style.display = 'block'; getEl('inv_desc').innerText = `Monthly Fee (${m})`; getEl('inv_amt').innerText = a + " ৳"; }
-        else { getEl('inv_table').style.display = 'none'; }
-        getEl('inv_date').innerText = new Date().toLocaleDateString('en-GB');
-        window.print();
+        if (totalEl) totalEl.innerText = total + " ৳";
+        if (tbody.innerHTML === "") {
+            tbody.innerHTML = "<tr><td colspan='5' class='text-center'>No matching records found</td></tr>";
+        }
+
+    } catch (e) {
+        console.error("Filter Error:", e);
     }
+};
+    
+
+function printInvoice(d, id, a, t, m = "") {
+    // প্রিন্ট মোড চালু করা
+    document.body.classList.add('printing-invoice');
+
+    // ১. টাইটেল (যেমন: Fees Receipt)
+    const title = document.getElementById('inv_type_title');
+    if (title) title.innerText = t;
+
+    // ২. স্টুডেন্ট ডাটা সেট করা
+    const content = document.getElementById('inv_content');
+    if (content) {
+        content.innerHTML = `
+            <p style="margin:5px 0"><strong>Student:</strong> ${d.name || d.studentName}</p>
+            <p style="margin:5px 0"><strong>ID:</strong> ${id}</p>
+            <p style="margin:5px 0"><strong>Class:</strong> ${d.cls}</p>
+            <p style="margin:5px 0"><strong>Phone:</strong> ${d.phone || 'N/A'}</p>
+        `;
+    }
+
+    // ৩. ডেসক্রিপশন এবং টাকার পরিমাণ
+    const desc = document.getElementById('inv_desc');
+    const amt = document.getElementById('inv_amt');
+    
+    if (desc) desc.innerText = m ? `Monthly Fee for ${m}` : "Registration/Admission Fee";
+    if (amt) amt.innerText = a + " ৳";
+
+    // ৪. তারিখ
+    const dateEl = document.getElementById('inv_date');
+    if (dateEl) dateEl.innerText = new Date().toLocaleDateString('en-GB');
+
+    // ৫. প্রিন্ট ডায়ালগ ওপেন করা
+    setTimeout(() => {
+        window.print();
+    }, 500);
+}
+
+
+
+// ৩. ইনফরমেশন টেবিল প্রিন্ট
+window.printInfoTable = () => {
+    document.body.className = 'printing-report';
+    
+    const type = getEl('info_type').selectedOptions[0].text;
+    const content = getEl('info_table_container').innerHTML;
+    getEl('print_title').innerText = type;
+    getEl('print_content_area').innerHTML = content;
+    
+    setTimeout(() => { window.print(); }, 200);
+};
+// ১. পেমেন্ট ইনভয়েস প্রিন্ট করার জন্য
+// window.printInvoiceMode = () => {
+//     document.body.className = 'printing-invoice';
+//     setTimeout(() => { window.print(); }, 500);
+// };
+
+// ২. রিপোর্ট প্রিন্ট করার জন্য
+// window.printReport = () => {
+//     document.body.className = 'printing-report';
+//     setTimeout(() => { window.print(); }, 500);
+// };
+
+// ৩. ইনফরমেশন বা স্টুডেন্ট লিস্ট প্রিন্ট করার জন্য
+// window.printInfo = () => {
+//     document.body.className = 'printing-info';
+//     setTimeout(() => { window.print(); }, 500);
+// };
+
 </script>
 </body>
 </html>
